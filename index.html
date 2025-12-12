@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anonymous Confessions</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(to right, #ff758c, #ff7eb3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px;
+    color: #fff;
+}
+.card {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    margin-bottom: 20px;
+}
+textarea {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    resize: none;
+    font-size: 16px;
+}
+button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    border: none;
+    border-radius: 10px;
+    background-color: #ff4fa3;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+}
+h2 { text-align: center; }
+.confession {
+    background: rgba(255,255,255,0.2);
+    padding: 10px;
+    margin: 8px 0;
+    border-radius: 8px;
+    word-wrap: break-word;
+}
+</style>
+</head>
+<body>
+
+<div class="card">
+<h2>Anonymous Confession Box</h2>
+<textarea id="confessionInput" rows="4" placeholder="Write your confession..."></textarea>
+<button onclick="submitConfession()">Submit Confession</button>
+</div>
+
+<div class="card">
+<h2>Confessions</h2>
+<div id="confessionList"></div>
+</div>
+
+<script>
+// Load confessions from LocalStorage
+let confessions = JSON.parse(localStorage.getItem("confessions") || "[]");
+
+function renderConfessions() {
+    const list = document.getElementById("confessionList");
+    list.innerHTML = confessions.map(c => `<div class="confession">💬 ${c}</div>`).join("");
+}
+
+// Submit a new confession
+function submitConfession() {
+    const input = document.getElementById("confessionInput").value.trim();
+    if(input) {
+        confessions.unshift(input); // add to top like NGL
+        localStorage.setItem("confessions", JSON.stringify(confessions));
+        document.getElementById("confessionInput").value = "";
+        renderConfessions();
+    }
+}
+
+// Initial render
+renderConfessions();
+</script>
+
+</body>
+</html>
