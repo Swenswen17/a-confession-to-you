@@ -23,26 +23,20 @@ body {
     box-shadow: 0 0 15px rgba(0,0,0,0.2);
     margin-bottom: 20px;
 }
-textarea {
-    width: 100%;
-    padding: 12px;
-    border-radius: 10px;
-    border: none;
-    resize: none;
-    font-size: 16px;
-}
-button {
+input, textarea, select, button {
     width: 100%;
     padding: 12px;
     margin-top: 10px;
-    border: none;
     border-radius: 10px;
+    border: none;
+    font-size: 16px;
+}
+button {
     background-color: #ff4fa3;
     color: white;
     font-weight: bold;
     cursor: pointer;
 }
-h2 { text-align: center; }
 .confession {
     background: rgba(255,255,255,0.2);
     padding: 10px;
@@ -50,13 +44,35 @@ h2 { text-align: center; }
     border-radius: 8px;
     word-wrap: break-word;
 }
+.nickname {
+    font-weight: bold;
+}
+.emoji {
+    font-size: 20px;
+    margin-left: 5px;
+}
 </style>
 </head>
 <body>
 
-<div class="card">
-<h2>Anonymous Confession Box</h2>
+<div class="card" id="nicknameCard">
+<h2>Enter Your Nickname</h2>
+<input type="text" id="nicknameInput" placeholder="Your nickname">
+<button onclick="setNickname()">Continue</button>
+</div>
+
+<div class="card" id="confessionCard" style="display:none;">
+<h2>Submit a Confession</h2>
+<p id="welcomeMsg"></p>
 <textarea id="confessionInput" rows="4" placeholder="Write your confession..."></textarea>
+<label for="emojiSelect">How do you feel?</label>
+<select id="emojiSelect">
+    <option value="❤️">In Love ❤️</option>
+    <option value="😃">Happy 😃</option>
+    <option value="😢">Sad 😢</option>
+    <option value="😡">Angry 😡</option>
+    <option value="😂">Funny 😂</option>
+</select>
 <button onclick="submitConfession()">Submit Confession</button>
 </div>
 
@@ -68,24 +84,50 @@ h2 { text-align: center; }
 <script>
 // Load confessions from LocalStorage
 let confessions = JSON.parse(localStorage.getItem("confessions") || "[]");
+let nickname = localStorage.getItem("nickname") || "";
 
 function renderConfessions() {
     const list = document.getElementById("confessionList");
-    list.innerHTML = confessions.map(c => `<div class="confession">💬 ${c}</div>`).join("");
+    // Shuffle confessions to make it random
+    const shuffled = confessions.slice().sort(() => 0.5 - Math.random());
+    list.innerHTML = shuffled.map(c => `<div class="confession"><span class="nickname">${c.nickname}:</span> ${c.text}<span class="emoji">${c.emoji}</span></div>`).join("");
 }
 
-// Submit a new confession
-function submitConfession() {
-    const input = document.getElementById("confessionInput").value.trim();
+// Handle nickname
+function setNickname() {
+    const input = document.getElementById("nicknameInput").value.trim();
     if(input) {
-        confessions.unshift(input); // add to top like NGL
-        localStorage.setItem("confessions", JSON.stringify(confessions));
-        document.getElementById("confessionInput").value = "";
-        renderConfessions();
+        nickname = input;
+        localStorage.setItem("nickname", nickname);
+        document.getElementById("nicknameCard").style.display = "none";
+        document.getElementById("confessionCard").style.display = "block";
+        document.getElementById("welcomeMsg").innerText = `Hi ${nickname}, write your confession anonymously!`;
     }
 }
 
-// Initial render
+// Submit confession
+function submitConfession() {
+    const text = document.getElementById("confessionInput").value.trim();
+    const emoji = document.getElementById("emojiSelect").value;
+    if(text && nickname) {
+        const newConfession = { nickname, text, emoji };
+        confessions.unshift(newConfession); // newest on top
+        localStorage.setItem("confessions", JSON.stringify(confessions));
+        document.getElementById("confessionInput").value = "";
+        renderConfessions();
+        alert("Confession submitted!");
+    } else {
+        alert("Please enter a confession.");
+    }
+}
+
+// If nickname already exists in LocalStorage, skip nickname card
+if(nickname) {
+    document.getElementById("nicknameCard").style.display = "none";
+    document.getElementById("confessionCard").style.display = "block";
+    document.getElementById("welcomeMsg").innerText = `Hi ${nickname}, write your confession anonymously!`;
+}
+
 renderConfessions();
 </script>
 
