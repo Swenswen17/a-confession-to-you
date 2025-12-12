@@ -5,16 +5,93 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Confess to Your Crush</title>
 <style>
-body { font-family: Arial, sans-serif; background: linear-gradient(to right, #fbc2eb, #a6c1ee); text-align:center; padding:20px; }
-.card { background: rgba(255,255,255,0.95); padding:20px; border-radius:15px; margin:20px auto; max-width:500px; box-shadow:0 0 15px rgba(0,0,0,0.2); }
-input, textarea, select, button { width: 90%; padding:10px; margin:8px 0; border-radius:8px; border:1px solid #ccc; font-size:16px; }
-button { background-color:#ff6b81; color:white; font-weight:bold; cursor:pointer; }
-.confession, .reply { background:#ffe0f0; margin:10px 0; padding:10px; border-radius:8px; text-align:left; }
-.emoji { font-size:24px; margin-left:5px; cursor:pointer; }
-a { color:#ff4fa3; }
+body { 
+  font-family: Arial, sans-serif; 
+  background: linear-gradient(to right, #fbc2eb, #a6c1ee); 
+  text-align:center; 
+  padding:20px;
+  overflow-x:hidden;
+  animation: gradientBG 10s ease infinite;
+}
+
+/* Background gradient animation */
+@keyframes gradientBG {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.card { 
+  background: rgba(255,255,255,0.95); 
+  padding:20px; 
+  border-radius:15px; 
+  margin:20px auto; 
+  max-width:500px; 
+  box-shadow:0 0 15px rgba(0,0,0,0.2); 
+  opacity:0;
+  transform: translateY(20px);
+  animation: fadeIn 1s forwards;
+}
+@keyframes fadeIn{
+  to { opacity:1; transform:translateY(0);}
+}
+
+input, textarea, select, button { 
+  width: 90%; 
+  padding:10px; 
+  margin:8px 0; 
+  border-radius:8px; 
+  border:1px solid #ccc; 
+  font-size:16px; 
+}
+button { 
+  background-color:#ff6b81; 
+  color:white; 
+  font-weight:bold; 
+  cursor:pointer; 
+  transition: transform 0.2s;
+}
+button:hover { transform: scale(1.05); }
+
+.confession, .reply { 
+  background:#ffe0f0; 
+  margin:10px 0; 
+  padding:10px; 
+  border-radius:8px; 
+  text-align:left; 
+  animation: fadeIn 0.5s forwards;
+}
+.emoji { 
+  font-size:24px; 
+  margin-left:5px; 
+  cursor:pointer; 
+}
+a { color:#ff4fa3; text-decoration:none; }
+a:hover { text-decoration:underline; }
+
+/* Music control button */
+#musicBtn { 
+  position: fixed; 
+  top: 10px; 
+  right: 10px; 
+  background:#ff6b81; 
+  border:none; 
+  border-radius:50%; 
+  width:50px; 
+  height:50px; 
+  cursor:pointer; 
+  color:white; 
+  font-size:24px;
+}
 </style>
 </head>
 <body>
+
+<!-- Background Music -->
+<audio id="bgMusic" loop autoplay>
+  <source src="https://www.bensound.com/bensound-music/bensound-romantic.mp3" type="audio/mpeg">
+</audio>
+<button id="musicBtn" onclick="toggleMusic()">🎵</button>
 
 <div class="card" id="confessCard">
 <h2>Write Your Confession 💖</h2>
@@ -34,6 +111,7 @@ a { color:#ff4fa3; }
 <br>
 <button onclick="generateLink()">Generate Shareable Link</button>
 <p id="linkMsg"></p>
+<button id="copyBtn" style="display:none;" onclick="copyLink()">Copy Link</button>
 </div>
 
 <div class="card" id="viewCard" style="display:none;">
@@ -79,6 +157,17 @@ function generateLink(){
   const shareLink = window.location.origin + window.location.pathname + '?data=' + encoded;
   
   document.getElementById('linkMsg').innerHTML = `Copy this link and send to your crush: <br><a href="${shareLink}" target="_blank">${shareLink}</a>`;
+  document.getElementById('copyBtn').style.display='inline-block';
+  document.getElementById('copyBtn').setAttribute('data-link', shareLink);
+}
+
+function copyLink(){
+  const link = document.getElementById('copyBtn').getAttribute('data-link');
+  navigator.clipboard.writeText(link).then(()=>{
+    alert('Link copied to clipboard!');
+  }).catch(()=>{
+    alert('Failed to copy link.');
+  });
 }
 
 function loadConfession(){
@@ -116,6 +205,11 @@ function displayReplies(){
     div.innerHTML=`<strong>${r.name}:</strong> ${r.message}`;
     listDiv.appendChild(div);
   });
+}
+
+function toggleMusic(){
+  const music = document.getElementById('bgMusic');
+  if(music.paused){ music.play(); } else { music.pause(); }
 }
 
 loadConfession();
