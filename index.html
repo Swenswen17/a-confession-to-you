@@ -3,133 +3,122 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Anonymous Confessions</title>
+<title>Confess to Your Crush</title>
 <style>
-body {
-    font-family: Arial, sans-serif;
-    background: linear-gradient(to right, #ff758c, #ff7eb3);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 30px;
-    color: #fff;
-}
-.card {
-    background: rgba(255, 255, 255, 0.1);
-    padding: 20px;
-    border-radius: 15px;
-    width: 90%;
-    max-width: 500px;
-    box-shadow: 0 0 15px rgba(0,0,0,0.2);
-    margin-bottom: 20px;
-}
-input, textarea, select, button {
-    width: 100%;
-    padding: 12px;
-    margin-top: 10px;
-    border-radius: 10px;
-    border: none;
-    font-size: 16px;
-}
-button {
-    background-color: #ff4fa3;
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
-}
-.confession {
-    background: rgba(255,255,255,0.2);
-    padding: 10px;
-    margin: 8px 0;
-    border-radius: 8px;
-    word-wrap: break-word;
-}
-.nickname {
-    font-weight: bold;
-}
-.emoji {
-    font-size: 20px;
-    margin-left: 5px;
-}
+body { font-family: Arial, sans-serif; background: linear-gradient(to right, #fbc2eb, #a6c1ee); text-align:center; padding:20px; }
+.card { background: rgba(255,255,255,0.95); padding:20px; border-radius:15px; margin:20px auto; max-width:500px; box-shadow:0 0 15px rgba(0,0,0,0.2); }
+input, textarea, select, button { width: 90%; padding:10px; margin:8px 0; border-radius:8px; border:1px solid #ccc; font-size:16px; }
+button { background-color:#ff6b81; color:white; font-weight:bold; cursor:pointer; }
+.confession, .reply { background:#ffe0f0; margin:10px 0; padding:10px; border-radius:8px; text-align:left; }
+.emoji { font-size:24px; margin-left:5px; cursor:pointer; }
+a { color:#ff4fa3; }
 </style>
 </head>
 <body>
 
-<div class="card" id="nicknameCard">
-<h2>Enter Your Nickname</h2>
-<input type="text" id="nicknameInput" placeholder="Your nickname">
-<button onclick="setNickname()">Continue</button>
-</div>
-
-<div class="card" id="confessionCard" style="display:none;">
-<h2>Submit a Confession</h2>
-<p id="welcomeMsg"></p>
-<textarea id="confessionInput" rows="4" placeholder="Write your confession..."></textarea>
-<label for="emojiSelect">How do you feel?</label>
-<select id="emojiSelect">
-    <option value="❤️">In Love ❤️</option>
-    <option value="😃">Happy 😃</option>
-    <option value="😢">Sad 😢</option>
-    <option value="😡">Angry 😡</option>
-    <option value="😂">Funny 😂</option>
+<div class="card" id="confessCard">
+<h2>Write Your Confession 💖</h2>
+<input type="text" id="boyName" placeholder="Your Name">
+<textarea id="confessMessage" rows="4" placeholder="Write your confession..."></textarea>
+<input type="text" id="youtubeLink" placeholder="YouTube link for a song (optional)">
+<select id="confessType">
+  <option value="crush">I like you 💘</option>
+  <option value="court">Can I court you? 🌸</option>
 </select>
-<button onclick="submitConfession()">Submit Confession</button>
+<p>Add Emoji / Sticker:</p>
+<span class="emoji" onclick="addEmoji('❤️')">❤️</span>
+<span class="emoji" onclick="addEmoji('😃')">😃</span>
+<span class="emoji" onclick="addEmoji('😢')">😢</span>
+<span class="emoji" onclick="addEmoji('😡')">😡</span>
+<span class="emoji" onclick="addEmoji('😂')">😂</span>
+<br>
+<button onclick="generateLink()">Generate Shareable Link</button>
+<p id="linkMsg"></p>
 </div>
 
-<div class="card">
-<h2>Confessions</h2>
-<div id="confessionList"></div>
+<div class="card" id="viewCard" style="display:none;">
+<h2>Confession 💌</h2>
+<p><strong id="confessToName"></strong> (<span id="confessTypeDisplay"></span>)</p>
+<p id="confessText"></p>
+<div id="youtubeDiv"></div>
+
+<h3>Reply to this confession</h3>
+<input type="text" id="replyName" placeholder="Your Name / Nickname">
+<textarea id="replyMessage" rows="3" placeholder="Write your reply..."></textarea>
+<p>Add Emoji:</p>
+<span class="emoji" onclick="addReplyEmoji('❤️')">❤️</span>
+<span class="emoji" onclick="addReplyEmoji('😃')">😃</span>
+<span class="emoji" onclick="addReplyEmoji('😢')">😢</span>
+<span class="emoji" onclick="addReplyEmoji('😡')">😡</span>
+<span class="emoji" onclick="addReplyEmoji('😂')">😂</span>
+<br>
+<button onclick="submitReply()">Submit Reply</button>
+<p id="replyMsg"></p>
+
+<h3>Replies Received:</h3>
+<div id="replyList"></div>
 </div>
 
 <script>
-// Load confessions from LocalStorage
-let confessions = JSON.parse(localStorage.getItem("confessions") || "[]");
-let nickname = localStorage.getItem("nickname") || "";
+let confessionData = {};
+let urlParams = new URLSearchParams(window.location.search);
 
-function renderConfessions() {
-    const list = document.getElementById("confessionList");
-    // Shuffle confessions to make it random
-    const shuffled = confessions.slice().sort(() => 0.5 - Math.random());
-    list.innerHTML = shuffled.map(c => `<div class="confession"><span class="nickname">${c.nickname}:</span> ${c.text}<span class="emoji">${c.emoji}</span></div>`).join("");
+function addEmoji(emoji){ document.getElementById('confessMessage').value += emoji; }
+function addReplyEmoji(emoji){ document.getElementById('replyMessage').value += emoji; }
+
+function generateLink(){
+  const name = document.getElementById('boyName').value.trim();
+  const message = document.getElementById('confessMessage').value.trim();
+  const youtube = document.getElementById('youtubeLink').value.trim();
+  const type = document.getElementById('confessType').value;
+  if(!name || !message){ alert('Fill name and message'); return; }
+  
+  confessionData = {name,message,youtube,type,reply:[]};
+  localStorage.setItem('confession', JSON.stringify(confessionData));
+  const encoded = encodeURIComponent(JSON.stringify(confessionData));
+  const shareLink = window.location.origin + window.location.pathname + '?data=' + encoded;
+  
+  document.getElementById('linkMsg').innerHTML = `Copy this link and send to your crush: <br><a href="${shareLink}" target="_blank">${shareLink}</a>`;
 }
 
-// Handle nickname
-function setNickname() {
-    const input = document.getElementById("nicknameInput").value.trim();
-    if(input) {
-        nickname = input;
-        localStorage.setItem("nickname", nickname);
-        document.getElementById("nicknameCard").style.display = "none";
-        document.getElementById("confessionCard").style.display = "block";
-        document.getElementById("welcomeMsg").innerText = `Hi ${nickname}, write your confession anonymously!`;
-    }
+function loadConfession(){
+  const dataParam = urlParams.get('data');
+  if(dataParam){
+    confessionData = JSON.parse(decodeURIComponent(dataParam));
+    document.getElementById('confessCard').style.display='none';
+    document.getElementById('viewCard').style.display='block';
+    
+    document.getElementById('confessToName').innerText = confessionData.name;
+    document.getElementById('confessTypeDisplay').innerText = confessionData.type==='crush'? 'I like you 💘' : 'Can I court you? 🌸';
+    document.getElementById('confessText').innerText = confessionData.message;
+    if(confessionData.youtube) document.getElementById('youtubeDiv').innerHTML = `<a href="${confessionData.youtube}" target="_blank">🎵 Listen to music</a>`;
+    displayReplies();
+  }
 }
 
-// Submit confession
-function submitConfession() {
-    const text = document.getElementById("confessionInput").value.trim();
-    const emoji = document.getElementById("emojiSelect").value;
-    if(text && nickname) {
-        const newConfession = { nickname, text, emoji };
-        confessions.unshift(newConfession); // newest on top
-        localStorage.setItem("confessions", JSON.stringify(confessions));
-        document.getElementById("confessionInput").value = "";
-        renderConfessions();
-        alert("Confession submitted!");
-    } else {
-        alert("Please enter a confession.");
-    }
+function submitReply(){
+  const rName = document.getElementById('replyName').value.trim();
+  const rMsg = document.getElementById('replyMessage').value.trim();
+  if(!rName || !rMsg){ alert('Fill your name and reply'); return; }
+  confessionData.reply.push({name:rName,message:rMsg});
+  localStorage.setItem('confession', JSON.stringify(confessionData));
+  document.getElementById('replyName').value=''; document.getElementById('replyMessage').value='';
+  document.getElementById('replyMsg').innerText='Reply submitted!';
+  displayReplies();
 }
 
-// If nickname already exists in LocalStorage, skip nickname card
-if(nickname) {
-    document.getElementById("nicknameCard").style.display = "none";
-    document.getElementById("confessionCard").style.display = "block";
-    document.getElementById("welcomeMsg").innerText = `Hi ${nickname}, write your confession anonymously!`;
+function displayReplies(){
+  const listDiv = document.getElementById('replyList');
+  listDiv.innerHTML='';
+  confessionData.reply.forEach(r=>{
+    const div = document.createElement('div');
+    div.className='reply';
+    div.innerHTML=`<strong>${r.name}:</strong> ${r.message}`;
+    listDiv.appendChild(div);
+  });
 }
 
-renderConfessions();
+loadConfession();
 </script>
-
 </body>
 </html>
