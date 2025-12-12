@@ -93,7 +93,19 @@ a:hover { text-decoration:underline; }
 </audio>
 <button id="musicBtn" onclick="toggleMusic()">🎵</button>
 
-<div class="card" id="confessCard">
+<!-- Welcome Card -->
+<div class="card" id="welcomeCard">
+  <h2>Hi there! 👋</h2>
+  <p>
+    Are you shy or “torpe”? This website is made just for you! 💖<br><br>
+    Confess your feelings to your loved one <strong>anonymously</strong> by sending them a special link using your spare Facebook account. You can even add a YouTube song that reminds you of them—but it’s optional.<br><br>
+    <strong>Always remember:</strong> confessing face-to-face is much better. This website is just a little help if you’re too shy to do it in person. 💌
+  </p>
+  <button onclick="startConfession()">Continue</button>
+</div>
+
+<!-- Confession Card -->
+<div class="card" id="confessCard" style="display:none;">
 <h2>Write Your Confession 💖</h2>
 <input type="text" id="boyName" placeholder="Your Name">
 <textarea id="confessMessage" rows="4" placeholder="Write your confession..."></textarea>
@@ -114,6 +126,7 @@ a:hover { text-decoration:underline; }
 <button id="copyBtn" style="display:none;" onclick="copyLink()">Copy Link</button>
 </div>
 
+<!-- View Confession Card -->
 <div class="card" id="viewCard" style="display:none;">
 <h2>Confession 💌</h2>
 <p><strong id="confessToName"></strong> (<span id="confessTypeDisplay"></span>)</p>
@@ -141,6 +154,11 @@ a:hover { text-decoration:underline; }
 let confessionData = {};
 let urlParams = new URLSearchParams(window.location.search);
 
+function startConfession(){
+  document.getElementById('welcomeCard').style.display='none';
+  document.getElementById('confessCard').style.display='block';
+}
+
 function addEmoji(emoji){ document.getElementById('confessMessage').value += emoji; }
 function addReplyEmoji(emoji){ document.getElementById('replyMessage').value += emoji; }
 
@@ -163,11 +181,8 @@ function generateLink(){
 
 function copyLink(){
   const link = document.getElementById('copyBtn').getAttribute('data-link');
-  navigator.clipboard.writeText(link).then(()=>{
-    alert('Link copied to clipboard!');
-  }).catch(()=>{
-    alert('Failed to copy link.');
-  });
+  navigator.clipboard.writeText(link).then(()=>{ alert('Link copied to clipboard!'); })
+  .catch(()=>{ alert('Failed to copy link.'); });
 }
 
 function loadConfession(){
@@ -175,6 +190,7 @@ function loadConfession(){
   if(dataParam){
     confessionData = JSON.parse(decodeURIComponent(dataParam));
     document.getElementById('confessCard').style.display='none';
+    document.getElementById('welcomeCard').style.display='none';
     document.getElementById('viewCard').style.display='block';
     
     document.getElementById('confessToName').innerText = confessionData.name;
@@ -191,7 +207,8 @@ function submitReply(){
   if(!rName || !rMsg){ alert('Fill your name and reply'); return; }
   confessionData.reply.push({name:rName,message:rMsg});
   localStorage.setItem('confession', JSON.stringify(confessionData));
-  document.getElementById('replyName').value=''; document.getElementById('replyMessage').value='';
+  document.getElementById('replyName').value=''; 
+  document.getElementById('replyMessage').value='';
   document.getElementById('replyMsg').innerText='Reply submitted!';
   displayReplies();
 }
